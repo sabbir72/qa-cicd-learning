@@ -14,13 +14,11 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 
 def read_test_results(xml_file):
-    """
-    JUnit XML file থেকে test case এবং result read করবে।
-    """
+   
 
     results = []
 
-    # XML file না থাকলে empty result return করবে
+    # XML file 
     if not os.path.exists(xml_file):
         return results
 
@@ -136,7 +134,7 @@ table_data = [
     ]
 ]
 
-# Test result না থাকলেও header থাকবে
+# Test result 
 if all_results:
     table_data.extend(all_results)
 else:

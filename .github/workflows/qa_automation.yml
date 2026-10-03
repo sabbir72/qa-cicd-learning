@@ -100,8 +100,8 @@ jobs:
       - regression
 
     # IMPORTANT:
-    # Smoke/Regression PASS, FAIL বা SKIPPED
-    # যাই হোক Report job চলবে
+    # Smoke/Regression PASS, FAIL or SKIPPED
+
     if: always()
 
     runs-on: ubuntu-latest
