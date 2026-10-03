@@ -17,7 +17,11 @@ def test_login_success(app_page, app_base_url):
     app_page.get_by_role("button", name="Login").click()
 
     # Products page verify
-    app_page.get_by_role("heading", name="Products").wait_for()
+    app_page.get_by_role(
+        "heading",
+        name="Products",
+        exact=True
+    ).wait_for()
 
     # URL verify
     assert "/products" in app_page.url
@@ -35,12 +39,21 @@ def test_logout_success(app_page, app_base_url):
     app_page.get_by_role("button", name="Login").click()
 
     # Products page
-    app_page.get_by_role("heading", name="Products").wait_for()
+    app_page.get_by_role(
+        "heading",
+        name="Products",
+        exact=True
+    ).wait_for()
 
     # Logout
     app_page.get_by_role("link", name="Logout").click()
 
     # Login page verify
-    app_page.get_by_role("heading", name="Login").wait_for()
+    app_page.get_by_role(
+        "heading",
+        name="Login",
+        exact=True
+    ).wait_for()
 
+    # URL verify
     assert "/login" in app_page.url
