@@ -9,6 +9,8 @@ on:
     types:
       - run-qa-tests
 
+  workflow_dispatch:
+
 jobs:
   # ==========================================
   # 1. SMOKE TEST
@@ -54,6 +56,7 @@ jobs:
   regression:
     name: Run Regression Tests
     needs: smoke
+
     runs-on: ubuntu-latest
 
     steps:
@@ -86,15 +89,19 @@ jobs:
           path: regression-report.xml
 
   # ==========================================
-  # 3. GENERATE PDF REPORT
+  # 3. GENERATE FINAL PDF REPORT
   # ==========================================
 
   report:
-    name: Generate PDF Report
+    name: Generate Final PDF Report
+
     needs:
       - smoke
       - regression
 
+    # IMPORTANT:
+    # Smoke/Regression PASS, FAIL বা SKIPPED
+    # যাই হোক Report job চলবে
     if: always()
 
     runs-on: ubuntu-latest
@@ -103,34 +110,62 @@ jobs:
       - name: Checkout QA repository
         uses: actions/checkout@v4
 
+      # ======================================
+      # Download Smoke Report
+      # ======================================
+
       - name: Download Smoke Report
+        if: always()
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: smoke-test-report
           path: reports/smoke
 
+      # ======================================
+      # Download Regression Report
+      # ======================================
+
       - name: Download Regression Report
+        if: always()
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: regression-test-report
           path: reports/regression
 
+      # ======================================
+      # Setup Python
+      # ======================================
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      # ======================================
+      # Install ReportLab
+      # ======================================
+
       - name: Install ReportLab
         run: |
           pip install reportlab
 
-      - name: Generate Test Result PDF
+      # ======================================
+      # Generate PDF
+      # ======================================
+
+      - name: Generate PDF Report
+        if: always()
         run: |
           python generate_report.py
 
+      # ======================================
+      # Upload Final PDF
+      # ======================================
+
       - name: Upload PDF Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: qa-test-report-pdf

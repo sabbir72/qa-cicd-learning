@@ -1,20 +1,38 @@
+import os
 import xml.etree.ElementTree as ET
+
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer
+)
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 
 def read_test_results(xml_file):
+    """
+    JUnit XML file থেকে test case এবং result read করবে।
+    """
 
     results = []
+
+    # XML file না থাকলে empty result return করবে
+    if not os.path.exists(xml_file):
+        return results
 
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
     for testcase in root.iter("testcase"):
 
-        test_name = testcase.get("name", "Unknown Test")
+        test_name = testcase.get(
+            "name",
+            "Unknown Test"
+        )
 
         failure = testcase.find("failure")
         error = testcase.find("error")
@@ -29,36 +47,40 @@ def read_test_results(xml_file):
         else:
             status = "PASS"
 
-        results.append([test_name, status])
+        results.append([
+            test_name,
+            status
+        ])
 
     return results
 
 
-# ------------------------------------------
+# ==========================================
 # Read Smoke Results
-# ------------------------------------------
+# ==========================================
 
 smoke_results = read_test_results(
     "reports/smoke/smoke-report.xml"
 )
 
 
-# ------------------------------------------
+# ==========================================
 # Read Regression Results
-# ------------------------------------------
+# ==========================================
 
 regression_results = read_test_results(
     "reports/regression/regression-report.xml"
 )
 
 
-# ------------------------------------------
+# ==========================================
 # Combine Results
-# ------------------------------------------
+# ==========================================
 
 all_results = []
 
 for name, status in smoke_results:
+
     all_results.append([
         "Smoke",
         name,
@@ -67,6 +89,7 @@ for name, status in smoke_results:
 
 
 for name, status in regression_results:
+
     all_results.append([
         "Regression",
         name,
@@ -74,9 +97,9 @@ for name, status in regression_results:
     ])
 
 
-# ------------------------------------------
+# ==========================================
 # Create PDF
-# ------------------------------------------
+# ==========================================
 
 pdf_file = "qa-test-report.pdf"
 
@@ -96,8 +119,14 @@ content.append(
     )
 )
 
-content.append(Spacer(1, 20))
+content.append(
+    Spacer(1, 20)
+)
 
+
+# ==========================================
+# Table
+# ==========================================
 
 table_data = [
     [
@@ -107,17 +136,85 @@ table_data = [
     ]
 ]
 
-table_data.extend(all_results)
+# Test result না থাকলেও header থাকবে
+if all_results:
+    table_data.extend(all_results)
+else:
+    table_data.append([
+        "-",
+        "No test result found",
+        "-"
+    ])
 
 
-table = Table(table_data)
+table = Table(
+    table_data,
+    colWidths=[100, 320, 80]
+)
+
+
+# ==========================================
+# Table Styling
+# ==========================================
 
 table.setStyle(
     TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 1),
-        ("PADDING", (0, 0), (-1, -1), 6),
+
+        # Header
+        (
+            "BACKGROUND",
+            (0, 0),
+            (-1, 0),
+            colors.grey
+        ),
+
+        (
+            "TEXTCOLOR",
+            (0, 0),
+            (-1, 0),
+            colors.white
+        ),
+
+        # Border
+        (
+            "GRID",
+            (0, 0),
+            (-1, -1),
+            1,
+            colors.black
+        ),
+
+        # Padding
+        (
+            "PADDING",
+            (0, 0),
+            (-1, -1),
+            6
+        ),
+
+        # Header alignment
+        (
+            "ALIGN",
+            (0, 0),
+            (-1, 0),
+            "CENTER"
+        ),
+
+        # Result alignment
+        (
+            "ALIGN",
+            (-1, 1),
+            (-1, -1),
+            "CENTER"
+        ),
+
+        # Vertical alignment
+        (
+            "VALIGN",
+            (0, 0),
+            (-1, -1),
+            "MIDDLE"
+        ),
     ])
 )
 
