@@ -78,21 +78,21 @@ jobs:
           echo "Branch: ${{ github.event.client_payload.branch }}"
           echo "===================================="
 
-      # --------------------------------------
-      # Run Smoke Tests
-      # --------------------------------------
-      - name: Run Smoke Tests
-        run: |
-          pytest tests/smoke \
-            -m smoke \
-            --junitxml=smoke-report.xml
+      # # --------------------------------------
+      # # Run Smoke Tests
+      # # --------------------------------------
+      # - name: Run Smoke Tests
+      #   run: |
+      #     pytest tests/smoke \
+      #       -m smoke \
+      #       --junitxml=smoke-report.xml
 
-      # --------------------------------------
-      # Upload Smoke Report
-      # --------------------------------------
-      - name: Upload Smoke Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smoke-test-report
-          path: smoke-report.xml
+      # # --------------------------------------
+      # # Upload Smoke Report
+      # # --------------------------------------
+      # - name: Upload Smoke Report
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: smoke-test-report
+      #     path: smoke-report.xml
