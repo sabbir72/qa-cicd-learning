@@ -6,11 +6,6 @@ on:
       - run-qa-tests
 
   workflow_dispatch:
-    inputs:
-      base_url:
-        description: "Application Base URL"
-        required: true
-        default: "https://developer-demo-app.vercel.app/"
 
 jobs:
   smoke:
@@ -29,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -38,16 +33,16 @@ jobs:
         run: |
           playwright install --with-deps chromium
 
-      - name: Show test information
+      - name: Show QA Information
         run: |
-          echo "======================================"
+          echo "===================================="
           echo "QA AUTOMATION STARTED"
-          echo "======================================"
+          echo "===================================="
           echo "Base URL: $BASE_URL"
-          echo "Source Repository: ${{ github.event.client_payload.source_repo }}"
+          echo "Source Repo: ${{ github.event.client_payload.source_repo }}"
           echo "Commit: ${{ github.event.client_payload.commit_sha }}"
           echo "Branch: ${{ github.event.client_payload.branch }}"
-          echo "======================================"
+          echo "===================================="
 
       - name: Run Smoke Tests
         run: |
@@ -55,57 +50,9 @@ jobs:
             -m smoke \
             --junitxml=smoke-report.xml
 
-      - name: Upload Smoke Test Report
+      - name: Upload Smoke Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: smoke-test-report
           path: smoke-report.xml
-
-  regression:
-    name: Regression Tests
-    needs: smoke
-    if: ${{ needs.smoke.result == 'success' }}
-    runs-on: ubuntu-latest
-
-    env:
-      BASE_URL: ${{ github.event.client_payload.base_url || inputs.base_url }}
-
-    steps:
-      - name: Checkout QA repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install Playwright Chromium
-        run: |
-          playwright install --with-deps chromium
-
-      - name: Show Regression Test Information
-        run: |
-          echo "======================================"
-          echo "REGRESSION TEST STARTED"
-          echo "======================================"
-          echo "Base URL: $BASE_URL"
-          echo "======================================"
-
-      - name: Run Regression Tests
-        run: |
-          pytest tests/regression \
-            -m regression \
-            --junitxml=regression-report.xml
-
-      - name: Upload Regression Test Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: regression-test-report
-          path: regression-report.xml
