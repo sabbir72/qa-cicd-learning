@@ -10,8 +10,12 @@ on:
       - run-qa-tests
 
 jobs:
-  qa-tests:
-    name: Run QA Tests
+  # ==========================================
+  # 1. SMOKE TEST
+  # ==========================================
+
+  smoke:
+    name: Run Smoke Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -34,8 +38,100 @@ jobs:
 
       - name: Run Smoke Tests
         run: |
-          pytest tests/smoke -m smoke
+          pytest tests/smoke -m smoke --junitxml=smoke-report.xml
+
+      - name: Upload Smoke Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-report
+          path: smoke-report.xml
+
+  # ==========================================
+  # 2. REGRESSION TEST
+  # ==========================================
+
+  regression:
+    name: Run Regression Tests
+    needs: smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout QA repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright
+        run: |
+          playwright install --with-deps chromium
 
       - name: Run Regression Tests
         run: |
-          pytest tests/regression -m regression
+          pytest tests/regression -m regression --junitxml=regression-report.xml
+
+      - name: Upload Regression Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-test-report
+          path: regression-report.xml
+
+  # ==========================================
+  # 3. GENERATE PDF REPORT
+  # ==========================================
+
+  report:
+    name: Generate PDF Report
+    needs:
+      - smoke
+      - regression
+
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout QA repository
+        uses: actions/checkout@v4
+
+      - name: Download Smoke Report
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: smoke-test-report
+          path: reports/smoke
+
+      - name: Download Regression Report
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: regression-test-report
+          path: reports/regression
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ReportLab
+        run: |
+          pip install reportlab
+
+      - name: Generate Test Result PDF
+        run: |
+          python generate_report.py
+
+      - name: Upload PDF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-test-report-pdf
+          path: qa-test-report.pdf
